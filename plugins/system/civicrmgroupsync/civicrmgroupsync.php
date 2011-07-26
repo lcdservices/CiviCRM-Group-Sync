@@ -91,7 +91,6 @@ class  plgSystemCivicrmGroupSync extends JPlugin
     
     //NOTE: If a user is deleted, we don't alter the contact record
     //NOTE: If a JGroup or CGroup is deleted, we don't remove from the linked group
-
     
     /*
      * CiviCRM -> Joomla
@@ -189,24 +188,44 @@ class  plgSystemCivicrmGroupSync extends JPlugin
     
     
     /*
-     * Run rules when mapping is created or enabled
+     * Run rules when mapping is created/edited or enabled
      * Note: we don't need to update users/contacts when a JGroup or CGroup
      * is created, as the group must precede the mapping record.
      * 
-     * Method is called after mapping rule is stored in the database
+     * Method is called right after the content is saved
      *
-     * @param   array       $user       Holds the new user data.
-     * @param   boolean     $isnew      True if a new user is stored.
-     * @param   boolean     $success    True if user was succesfully stored in the database.
-     * @param   string      $msg        Message.
-     *
-     * @return  void
+     * @param   string      The context of the content passed to the plugin (added in 1.6)
+     * @param   object      A JTableContent object
+     * @param   bool        If the content is just about to be created
      * @since   1.6
-     * @throws  Exception on error.
      */
-    
-    
-    
+    public function onContentAfterSave($context, &$article, $isNew) {
+        
+        $ruleID    = $article->id;
+        $ruleState = $article->state;
+        $jgroup_id = $article->jgroup_id;
+        $cgroup_id = $article->cgroup_id;
+        
+        //if the sync rule is disabled, take no action and exit
+        if ( !$ruleState ) {
+            return;
+        }
+        
+        //update Joomla groups
+        
+        
+        //update CiviCRM groups
+        
+        
+        
+        // Debug
+        /*echo '<pre>';
+        echo '$context '.$context.'</br>';
+        echo '$isNew '.$isNew.'</br>';
+        print_r(&$article);
+        echo '</pre>';
+        exit();*/
+    }
     
     /*
      * Helper function to retrieve sync mappings
