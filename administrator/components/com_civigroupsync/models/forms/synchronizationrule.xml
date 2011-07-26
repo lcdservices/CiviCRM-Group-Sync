@@ -13,7 +13,7 @@
               key_field="id"
               value_field="title"
               type="sql"
-              query="SELECT id, title FROM #__usergroups"
+              query="SELECT id, title FROM #__usergroups WHERE title != 'Public'"
               label="COM_CIVIGROUPSYNC_FORM_LBL_SYNCHRONIZATIONRULE_JGROUP_ID" 
               description="COM_CIVIGROUPSYNC_FORM_DESC_SYNCHRONIZATIONRULE_JGROUP_ID"
               required="true" 
