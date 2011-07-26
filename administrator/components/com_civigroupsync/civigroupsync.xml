@@ -23,21 +23,9 @@
 
 	<files folder="site">
 		<filename>index.html</filename>
-		<filename>civigroupsync.php</filename>
-		<filename>controller.php</filename>
-		<filename>router.php</filename>
-		<folder>views</folder>
-		<folder>models</folder>
-		<folder>controllers</folder>
-		<folder>helpers</folder>
 	</files>
-	<languages folder="site">
-		<language tag="en-GB">language/en-GB.com_civigroupsync.ini
-		</language>
-	</languages>
 	<administration>
-		<menu link="option=com_civigroupsync&amp;view=synchronizationrules" view="synchronizationrules" img="class:move" alt="Civigroupsync/Synchronizationrules">COM_CIVIGROUPSYNC</menu>
-
+		<menu link="option=com_civigroupsync&amp;view=synchronizationrules" view="synchronizationrules" img="class:component" alt="Civigroupsync/Synchronizationrules">COM_CIVIGROUPSYNC</menu>
 		<files folder="administrator">
 			<filename>access.xml</filename>
 			<filename>config.xml</filename>
@@ -52,10 +40,8 @@
 			<folder>views</folder>
 		</files>
 		<languages folder="administrator">
-			<language tag="en-GB">language/en-GB.com_civigroupsync.ini
-			</language>
-			<language tag="en-GB">language/en-GB.com_civigroupsync.sys.ini
-			</language>
+			<language tag="en-GB">language/en-GB.com_civigroupsync.ini</language>
+			<language tag="en-GB">language/en-GB.com_civigroupsync.sys.ini</language>
 		</languages>
 	</administration>
 </extension>

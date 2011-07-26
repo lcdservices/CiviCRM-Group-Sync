@@ -52,7 +52,7 @@ class CiviGroupSyncViewSynchronizationrules extends JView
 		$state	= $this->get('State');
 		$canDo	= CiviGroupSyncHelper::getActions($state->get('filter.category_id'));
 
-		JToolBarHelper::title(JText::_('COM_CIVIGROUPSYNC_TITLE_SYNCHRONIZATIONRULES'), 'synchronizationrules.png');
+		JToolBarHelper::title(JText::_('COM_CIVIGROUPSYNC_TITLE_SYNCHRONIZATIONRULES'), 'generic.png');
 
         //Check if the form exists before showing the add/edit buttons
         $formPath = JPATH_COMPONENT_ADMINISTRATOR.DS.'views'.DS.'synchronizationrule';

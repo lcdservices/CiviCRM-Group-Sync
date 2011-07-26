@@ -56,7 +56,7 @@ class CiviGroupSyncViewSynchronizationRule extends JView
         }
 		$canDo		= CiviGroupSyncHelper::getActions();
 
-		JToolBarHelper::title(JText::_('COM_CIVIGROUPSYNC_TITLE_SYNCHRONIZATIONRULE'), 'synchronizationrule.png');
+		JToolBarHelper::title(JText::_('COM_CIVIGROUPSYNC_TITLE_SYNCHRONIZATIONRULE'), 'generic.png');
 
 		// If not checked out, can save the item.
 		if (!$checkedOut && ($canDo->get('core.edit')||($canDo->get('core.create'))))
