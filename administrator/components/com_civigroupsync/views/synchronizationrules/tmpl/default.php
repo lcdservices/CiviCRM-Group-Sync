@@ -98,7 +98,7 @@ $saveOrder	= $listOrder == 'a.ordering';
 				</td>
 
 				<td>
-				    <?php $jGroupName = CivigroupsyncHelper::getJGroupName($item->jgroup_id); ?>
+				    <?php $jGroupName = CiviGroupSyncHelper::getJGroupName($item->jgroup_id); ?>
 				    <?php if ($canEdit || $canEditOwn) : ?>
                         <a href="<?php echo JRoute::_('index.php?option=com_civigroupsync&task=synchronizationrule.edit&id='.$item->id);?>">
                             <?php echo $jGroupName.'</a> (id: '.$item->jgroup_id.')'; ?>
@@ -107,7 +107,7 @@ $saveOrder	= $listOrder == 'a.ordering';
                     <?php endif; ?>
 				</td>
 				<td>
-				    <?php $cGroupName = CivigroupsyncHelper::getCGroupName($item->cgroup_id); ?>
+				    <?php $cGroupName = CiviGroupSyncHelper::getCGroupName($item->cgroup_id); ?>
                     <?php if ($canEdit || $canEditOwn) : ?>
                         <a href="<?php echo JRoute::_('index.php?option=com_civigroupsync&task=synchronizationrule.edit&id='.$item->id);?>">
                             <?php echo $cGroupName.'</a> (id: '.$item->cgroup_id.')'; ?>

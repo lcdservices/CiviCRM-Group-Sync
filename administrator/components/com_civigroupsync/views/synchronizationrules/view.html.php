@@ -13,9 +13,9 @@ defined('_JEXEC') or die;
 jimport('joomla.application.component.view');
 
 /**
- * View class for a list of Civigroupsync.
+ * View class for a list of CiviGroupSync.
  */
-class CivigroupsyncViewSynchronizationrules extends JView
+class CiviGroupSyncViewSynchronizationrules extends JView
 {
 	protected $items;
 	protected $pagination;
@@ -50,7 +50,7 @@ class CivigroupsyncViewSynchronizationrules extends JView
 		require_once JPATH_COMPONENT.DS.'helpers'.DS.'civigroupsync.php';
 
 		$state	= $this->get('State');
-		$canDo	= CivigroupsyncHelper::getActions($state->get('filter.category_id'));
+		$canDo	= CiviGroupSyncHelper::getActions($state->get('filter.category_id'));
 
 		JToolBarHelper::title(JText::_('COM_CIVIGROUPSYNC_TITLE_SYNCHRONIZATIONRULES'), 'synchronizationrules.png');
 

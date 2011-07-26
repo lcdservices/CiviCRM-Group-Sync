@@ -15,7 +15,7 @@ jimport('joomla.application.component.controllerform');
 /**
  * Synchronizationrule controller class.
  */
-class CivigroupsyncControllerSynchronizationrule extends JControllerForm
+class CiviGroupSyncControllerSynchronizationrule extends JControllerForm
 {
 
     function __construct() {

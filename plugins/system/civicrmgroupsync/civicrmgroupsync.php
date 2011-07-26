@@ -14,11 +14,9 @@ jimport( 'joomla.plugin.plugin' );
 
 class  plgSystemCivicrmGroupSync extends JPlugin
 {
-	function __construct(& $subject, $config)
-	{
-		parent::__construct($subject, $config);
-	}
-
+	    
+        
+        
 	function onAfterInitialise()
 	{  
 		return true;

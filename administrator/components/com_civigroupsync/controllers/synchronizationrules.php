@@ -15,13 +15,13 @@ jimport('joomla.application.component.controlleradmin');
 /**
  * Synchronizationrules list controller class.
  */
-class CivigroupsyncControllerSynchronizationrules extends JControllerAdmin
+class CiviGroupSyncControllerSynchronizationrules extends JControllerAdmin
 {
 	/**
 	 * Proxy for getModel.
 	 * @since	1.6
 	 */
-	public function &getModel($name = 'synchronizationrule', $prefix = 'CivigroupsyncModel')
+	public function &getModel($name = 'synchronizationrule', $prefix = 'CiviGroupSyncModel')
 	{
 		$model = parent::getModel($name, $prefix, array('ignore_request' => true));
 		return $model;
