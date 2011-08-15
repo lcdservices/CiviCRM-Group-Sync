@@ -1,16 +1,15 @@
 <?php
 /**
- * @version		:  2011-07-23 20:07:15$
- * @author		 
+ * @version		2011-07-23 20:07:15$
+ * @author		Brian Shaughnessy
  * @package		CiviCRM Group Sync
- * @copyright	Copyright (C) 2011- . All rights reserved.
- * @license		
+ * @copyright	Copyright (C) 2011. All rights reserved.
+ * @license		GNU GPL
  */
 
 defined( '_JEXEC' ) or die( 'Restricted access' );
 
 jimport( 'joomla.plugin.plugin' );
-
 
 class  plgSystemCiviGroupSync extends JPlugin
 {
@@ -52,7 +51,7 @@ class  plgSystemCiviGroupSync extends JPlugin
                                 array ('version' => '3', 
                                        'uf_id'   => $juserid)
                                );
-        $cuserid = $cuser['id'];
+        $cuserid = $cuser['values'][$cuser['id']]['contact_id'];
         
         //TODO: if contact does not exist, we should probably create it here
         
@@ -76,18 +75,10 @@ class  plgSystemCiviGroupSync extends JPlugin
                             );
             }
         }
-
-        // Debug
-        /*echo '<pre>'; 
-        //print_r($mappings); 
-        //print_r($user);
-        echo 'juser '.$juser.'</br>';
-        echo 'cuser ';
-        print_r($cuser);
-        echo '</pre>'; 
-        //exit();*/
         
-    }
+        return;
+        
+    } //end onUserAfterSave
     
     //NOTE: If a user is deleted, we don't alter the contact record
     //NOTE: If a JGroup or CGroup is deleted, we don't remove from the linked group
@@ -176,21 +167,16 @@ class  plgSystemCiviGroupSync extends JPlugin
                 break;
         }
         
-        // Debug
-        /*echo '<pre>';
-        echo '$objectId '.$objectId.'</br>';
-        echo '$juserid '.$juserid.'</br>';
-        print_r($objectRef);
-        print_r($juser);
-        echo '</pre>';*/
-        //exit();
-    }
+    } //end civicrm_post
     
     
     /*
+     * CiviCRM <-> Joomla
      * Run rules when mapping is created/edited or enabled
      * Note: we don't need to update users/contacts when a JGroup or CGroup
      * is created, as the group must precede the mapping record.
+     * 
+     * Note: we don't modify users/contacts if a sync rule is removed or disabled
      * 
      * Method is called right after the content is saved
      *
@@ -201,31 +187,76 @@ class  plgSystemCiviGroupSync extends JPlugin
      */
     public function onContentAfterSave($context, &$article, $isNew) {
         
+        // Instantiate CiviCRM
+        require_once JPATH_ROOT.'/'.'administrator/components/com_civicrm/civicrm.settings.php';
+        require_once 'CRM/Core/Config.php';
+        require_once 'CRM/Contact/BAO/Group.php';
+        require_once 'api/api.php';
+        $civiConfig =& CRM_Core_Config::singleton( );
+        
+        jimport( 'joomla.user.helper' );
+        jimport( 'joomla.access.access' );
+        
         $ruleID    = $article->id;
         $ruleState = $article->state;
         $jgroup_id = $article->jgroup_id;
         $cgroup_id = $article->cgroup_id;
-        
+
         //if the sync rule is disabled, take no action and exit
         if ( !$ruleState ) {
             return;
         }
-        
+
         //update Joomla groups
-        
+        $cGroupContacts = CRM_Contact_BAO_Group::getGroupContacts($cgroup_id);
+        foreach ( $cGroupContacts as $cGroupContact ) {
+            
+            $cid     = $cGroupContact['contact_id'];
+            $juser   = civicrm_api( "UFMatch",
+                                    "get", 
+                                    array ('version'    => '3', 
+                                           'contact_id' => $cid)
+                                   );
+            
+            //if we can't match with a Joomla user, move to next record
+            if ( $juser['count'] == 0 ) {
+                continue;
+            }
+            
+            $juserid = $juser['values'][$juser['id']]['uf_id'];
+
+            //add to Joomla group
+            JUserHelper::addUserToGroup( $juserid, $jgroup_id );
+        }
         
         //update CiviCRM groups
+        $jGroupContacts = JAccess::getUsersByGroup($jgroup_id);
+        foreach ( $jGroupContacts as $juserid ) {
+            
+            $cuser   = civicrm_api( "UFMatch",
+                                    "get", 
+                                    array ('version' => '3', 
+                                           'uf_id'   => $juserid)
+                                   );
+                                   
+            //if we can't match with a CiviCRM user, move to next record
+            if ( $cuser['count'] == 0 ) {
+                continue;
+            }
+            
+            $cuserid = $cuser['values'][$cuser['id']]['contact_id'];
+            
+            //add to CiviCRM group
+            civicrm_api( "GroupContact",
+                         "create", 
+                         array ('version'    => '3', 
+                                'group_id'   => $cgroup_id, 
+                                'contact_id' => $cuserid)
+                        );
+            
+        }
         
-        
-        
-        // Debug
-        /*echo '<pre>';
-        echo '$context '.$context.'</br>';
-        echo '$isNew '.$isNew.'</br>';
-        print_r(&$article);
-        echo '</pre>';
-        exit();*/
-    }
+    } //end onContentAfterSave
     
     /*
      * Helper function to retrieve sync mappings
@@ -241,7 +272,7 @@ class  plgSystemCiviGroupSync extends JPlugin
 
         return $mappings;
         
-    }
+    } //end getCiviGroupSyncMappings
     
     /*
      * Helper function to check if the user has multiple valid mappings to a Joomla group
@@ -286,17 +317,9 @@ class  plgSystemCiviGroupSync extends JPlugin
                 }
             }
         }
-        
-        // Debug
-        /*echo '<pre>';
-        print_r($contactGroups);
-        print_r($civiGroups);
-        echo 'countCiviGroups: '.$countCiviGroups.'<br />';
-        echo '</pre>';*/
-        //exit();
                 
         return $countCiviGroups;
         
-    }
+    } //end countCiviJoomlaGroups
 
 }
