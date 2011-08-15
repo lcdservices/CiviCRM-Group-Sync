@@ -12,7 +12,7 @@ defined( '_JEXEC' ) or die( 'Restricted access' );
 jimport( 'joomla.plugin.plugin' );
 
 
-class  plgSystemCivicrmGroupSync extends JPlugin
+class  plgSystemCiviGroupSync extends JPlugin
 {
 	
 	/*
