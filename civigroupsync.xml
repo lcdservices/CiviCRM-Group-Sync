@@ -9,6 +9,8 @@
 	<authorUrl>www.lcdservices.biz</authorUrl>
 	<version>1.0.0</version>
 	<description>Sync CiviCRM groups with Joomla ACL groups. Using this tool you can dynamically manage access control based on CiviCRM group subscription.</description>
+    
+    <scriptfile>script.php</scriptfile>
 
 	<install> <!-- Runs on install -->
     	<sql>
@@ -21,12 +23,13 @@
   		</sql>
    </uninstall>
 
-	<files folder="site">
+	<files folder="components/com_civigroupsync">
 		<filename>index.html</filename>
 	</files>
+	
 	<administration>
 		<menu link="option=com_civigroupsync&amp;view=synchronizationrules" view="synchronizationrules" img="class:component" alt="CiviCRM Group Sync">COM_CIVIGROUPSYNC</menu>
-		<files folder="administrator">
+		<files folder="administrator/components/com_civigroupsync">
 			<filename>access.xml</filename>
 			<filename>config.xml</filename>
 			<filename>controller.php</filename>
@@ -39,10 +42,15 @@
 			<folder>tables</folder>
 			<folder>views</folder>
 		</files>
-		<languages folder="administrator">
-			<language tag="en-GB">language/en-GB.com_civigroupsync.ini</language>
-			<language tag="en-GB">language/en-GB.com_civigroupsync.sys.ini</language>
+		<languages folder="administrator/language/en-GB">
+			<language tag="en-GB">en-GB.com_civigroupsync.ini</language>
+			<language tag="en-GB">en-GB.com_civigroupsync.sys.ini</language>
 		</languages>
 	</administration>
+	
+	<plugins>
+        <plugin folder="plugins/civicrm" plugin="civigroupsync" name="CiviCRM Group Sync" group="civicrm" />
+    </plugins>
+    
 </extension>
 
