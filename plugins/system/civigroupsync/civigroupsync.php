@@ -97,7 +97,7 @@ class  plgSystemCiviGroupSync extends JPlugin
      * @since   1.6
      */
     public function civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
-            
+
         if ( $objectName != 'GroupContact' ) {
             return;
         }
@@ -169,7 +169,6 @@ class  plgSystemCiviGroupSync extends JPlugin
         
     } //end civicrm_post
     
-    
     /*
      * CiviCRM <-> Joomla
      * Run rules when mapping is created/edited or enabled
@@ -186,17 +185,7 @@ class  plgSystemCiviGroupSync extends JPlugin
      * @since   1.6
      */
     public function onContentAfterSave($context, &$article, $isNew) {
-        
-        // Instantiate CiviCRM
-        require_once JPATH_ROOT.'/'.'administrator/components/com_civicrm/civicrm.settings.php';
-        require_once 'CRM/Core/Config.php';
-        require_once 'CRM/Contact/BAO/Group.php';
-        require_once 'api/api.php';
-        $civiConfig =& CRM_Core_Config::singleton( );
-        
-        jimport( 'joomla.user.helper' );
-        jimport( 'joomla.access.access' );
-        
+
         $ruleID    = $article->id;
         $ruleState = $article->state;
         $jgroup_id = $article->jgroup_id;
@@ -204,8 +193,25 @@ class  plgSystemCiviGroupSync extends JPlugin
 
         //if the sync rule is disabled, take no action and exit
         if ( !$ruleState ) {
-            return;
+            return true;
         }
+        
+        //if we are not in the right context, exit
+        if ( !in_array( $context, array('com_civigroupsync.synchronizationrule',
+                                        'com_civigroupsync.synchronizationrules') ) ) {
+            return true;                   
+        }
+        
+        //instantiate CiviCRM
+        require_once JPATH_ROOT.'/'.'administrator/components/com_civicrm/civicrm.settings.php';
+        require_once 'CRM/Core/Config.php';
+        require_once 'CRM/Contact/BAO/Group.php';
+        require_once 'api/api.php';
+        $civiConfig =& CRM_Core_Config::singleton( );
+        
+        //include Joomla files
+        jimport( 'joomla.user.helper' );
+        jimport( 'joomla.access.access' );
 
         //update Joomla groups
         $cGroupContacts = CRM_Contact_BAO_Group::getGroupContacts($cgroup_id);
@@ -255,6 +261,8 @@ class  plgSystemCiviGroupSync extends JPlugin
                         );
             
         }
+        
+        return true;
         
     } //end onContentAfterSave
     

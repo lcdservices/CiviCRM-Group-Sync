@@ -46,10 +46,10 @@
 			<language tag="en-GB">en-GB.com_civigroupsync.ini</language>
 			<language tag="en-GB">en-GB.com_civigroupsync.sys.ini</language>
 		</languages>
-	</administration>
+    </administration>
 	
-	<plugins>
-        <plugin folder="plugins/civicrm" plugin="civigroupsync" name="CiviCRM Group Sync" group="civicrm" />
+    <plugins>
+        <plugin folder="plugins/system" plugin="civigroupsync" name="CiviCRM Group Sync" group="system" />
     </plugins>
     
 </extension>
