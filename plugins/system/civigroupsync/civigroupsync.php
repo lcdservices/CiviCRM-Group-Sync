@@ -29,7 +29,8 @@ class  plgSystemCiviGroupSync extends JPlugin
      * @throws  Exception on error.
      */
     function onUserAfterSave( $user, $isnew, $success, $msg ) {
-    
+
+        jimport( 'joomla.user.helper' );
         $app = JFactory::getApplication();
         
         // Instantiate CiviCRM
@@ -50,16 +51,38 @@ class  plgSystemCiviGroupSync extends JPlugin
                                 "get", 
                                 array ('version' => '3', 
                                        'uf_id'   => $juserid)
-                               );
-        $cuserid = $cuser['values'][$cuser['id']]['contact_id'];
+                                );
+        if ( $cuser['count'] > 0 ) {
+
+			$cuserid = $cuser['values'][$cuser['id']]['contact_id'];
         
-        //TODO: if contact does not exist, we should probably create it here
+        //if contact does not exist, we should create it here
+		} else {
+			$params = array( 'version'      => 3,
+			                 'contact_type' => 'Individual',
+							 'last_name'    => $user['email'],
+							 'dupe_check'   => 1,
+							 'api.email.create' => array( 
+      							'email'            => $user['email'],
+								'location_type_id' => 6,
+								'is_primary'       => 1,
+							    ),
+							 );
+			$contact = civicrm_api( 'contact', 'create', $params );
+			$cuserid = $contact['id'];
+			
+			//also construct uf_match record
+			$sql = "INSERT INTO civicrm_uf_match (domain_id, uf_id, uf_name, contact_id) VALUES
+			        ( 1, $juserid, '{$user['email']}', $cuserid );";
+			CRM_Core_DAO::executeQuery($sql);
+		}
+
+		//get the users ACL groups; the $user object is unreliable so retrieve using helper
+		$jUserGroups = JUserHelper::getUserGroups($juserid);
         
-        // Cycle through mappings and add to/remove from CiviCRM groups
+        //cycle through mappings and add to/remove from CiviCRM groups
         foreach ( $mappings as $mapping ) {
-            if ( in_array($mapping['jgroup_id'], $user['groups']) ) {
-                //echo 'jgroup_id '.$mapping['jgroup_id'].'</br>';
-                //echo 'cgroup_id '.$mapping['cgroup_id'].'</br>';
+			if ( in_array($mapping['jgroup_id'], $jUserGroups) ) {
                 civicrm_api( "GroupContact",
                              "create", 
                              array ('version'    => '3', 
@@ -212,6 +235,7 @@ class  plgSystemCiviGroupSync extends JPlugin
         //include Joomla files
         jimport( 'joomla.user.helper' );
         jimport( 'joomla.access.access' );
+        jimport( 'joomla.factory' );
 
         //update Joomla groups
         $cGroupContacts = CRM_Contact_BAO_Group::getGroupContacts($cgroup_id);
@@ -231,8 +255,16 @@ class  plgSystemCiviGroupSync extends JPlugin
             
             $juserid = $juser['values'][$juser['id']]['uf_id'];
 
-            //add to Joomla group
-            JUserHelper::addUserToGroup( $juserid, $jgroup_id );
+			//check if user exists
+			$user = JFactory::getUser($juserid);
+			if ( $user->id ) {
+            	//add to Joomla group
+            	JUserHelper::addUserToGroup( $juserid, $jgroup_id );
+			} else {
+				//delete the uf_match record as it is an orphan
+				$sql = "DELETE FROM civicrm_uf_match WHERE uf_id = $juserid;";
+				$del = CRM_Core_DAO::executeQuery($sql);
+			}
         }
         
         //update CiviCRM groups
