@@ -1,12 +1,12 @@
 <?php
+
 /**
- * @version     1.0.0
+ * @version     2.0.0
  * @package     com_civigroupsync
  * @copyright   Copyright (C) 2011. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Created by com_combuilder - http://www.notwebdesign.com
+ * @author      Brian Shaughnessy <brian@lcdservices.biz> - www.lcdservices.biz
  */
-
 defined('_JEXEC') or die;
 
 jimport('joomla.application.component.modellist');
@@ -14,8 +14,7 @@ jimport('joomla.application.component.modellist');
 /**
  * Methods supporting a list of CiviGroupSync records.
  */
-class CiviGroupSyncModelsynchronizationrules extends JModelList
-{
+class CiviGroupSyncModelsynchronizationrules extends JModelList {
 
     /**
      * Constructor.
@@ -24,8 +23,7 @@ class CiviGroupSyncModelsynchronizationrules extends JModelList
      * @see        JController
      * @since    1.6
      */
-    public function __construct($config = array())
-    {
+    public function __construct($config = array()) {
         if (empty($config['filter_fields'])) {
             $config['filter_fields'] = array(
                                 'id', 'a.id',
@@ -33,6 +31,7 @@ class CiviGroupSyncModelsynchronizationrules extends JModelList
                 'state', 'a.state',
                 'jgroup_id', 'a.jgroup_id',
                 'cgroup_id', 'a.cgroup_id',
+                'created_by', 'a.created_by',
 
             );
         }
@@ -40,14 +39,12 @@ class CiviGroupSyncModelsynchronizationrules extends JModelList
         parent::__construct($config);
     }
 
-
 	/**
 	 * Method to auto-populate the model state.
 	 *
 	 * Note. Calling getState in this method will result in recursion.
 	 */
-	protected function populateState($ordering = null, $direction = null)
-	{
+    protected function populateState($ordering = null, $direction = null) {
 		// Initialise variables.
 		$app = JFactory::getApplication('administrator');
 
@@ -58,12 +55,22 @@ class CiviGroupSyncModelsynchronizationrules extends JModelList
 		$published = $app->getUserStateFromRequest($this->context.'.filter.state', 'filter_published', '', 'string');
 		$this->setState('filter.state', $published);
 
+        
+		//Filtering jgroup_id
+		$this->setState('filter.jgroup_id', $app->getUserStateFromRequest($this->context.'.filter.jgroup_id', 'filter_jgroup_id', '', 'string'));
+
+		//Filtering cgroup_id
+		$this->setState('filter.cgroup_id', $app->getUserStateFromRequest($this->context.'.filter.cgroup_id', 'filter_cgroup_id', '', 'string'));
+
+    //Filtering created_by
+    $this->setState('filter.created_by', $app->getUserStateFromRequest($this->context.'.filter.created_by', 'filter_created_by', '', 'string'));
+
 		// Load the parameters.
 		$params = JComponentHelper::getParams('com_civigroupsync');
 		$this->setState('params', $params);
 
 		// List state information.
-		parent::populateState('a.id', 'asc');
+        parent::populateState('a.jgroup_id', 'asc');
 	}
 
 	/**
@@ -77,8 +84,7 @@ class CiviGroupSyncModelsynchronizationrules extends JModelList
 	 * @return	string		A store id.
 	 * @since	1.6
 	 */
-	protected function getStoreId($id = '')
-	{
+    protected function getStoreId($id = '') {
 		// Compile the store id.
 		$id.= ':' . $this->getState('filter.search');
 		$id.= ':' . $this->getState('filter.state');
@@ -92,55 +98,68 @@ class CiviGroupSyncModelsynchronizationrules extends JModelList
 	 * @return	JDatabaseQuery
 	 * @since	1.6
 	 */
-	protected function getListQuery()
-	{
+    protected function getListQuery() {
 		// Create a new query object.
-		$db		= $this->getDbo();
-		$query	= $db->getQuery(true);
+		$db	= $this->getDbo();
+		$query = $db->getQuery(true);
 
 		// Select the required fields from the table.
 		$query->select(
 			$this->getState(
-				'list.select',
-				'a.*'
+                        'list.select', 'a.*'
 			)
 		);
 		$query->from('`#__civigroupsync_rules` AS a');
 
+        
+		// Join over the users for the checked out user
+		$query->select("uc.name AS editor");
+		$query->join("LEFT", "#__users AS uc ON uc.id=a.checked_out");
+		// Join over the user field 'created_by'
+		$query->select('created_by.name AS created_by');
+		$query->join('LEFT', '#__users AS created_by ON created_by.id = a.created_by');
 
-                // Join over the users for the checked out user.
-                $query->select('uc.name AS editor');
-                $query->join('LEFT', '#__users AS uc ON uc.id=a.checked_out');
-            
+        
 
-
-                // Filter by published state
-                $published = $this->getState('filter.state');
-                if (is_numeric($published)) {
-                    $query->where('a.state = '.(int) $published);
-                } else if ($published === '') {
-                    $query->where('(a.state IN (0, 1))');
-                }
-                    
+    // Filter by published state
+    $published = $this->getState('filter.state');
+    if (is_numeric($published)) {
+      $query->where('a.state = '.(int) $published);
+		} else if ($published === '') {
+      $query->where('(a.state IN (0, 1))');
+    }
 
 		// Filter by search in title
 		$search = $this->getState('filter.search');
 		if (!empty($search)) {
 			if (stripos($search, 'id:') === 0) {
 				$query->where('a.id = '.(int) substr($search, 3));
-			} else {
-				$search = $db->Quote('%'.$db->getEscaped($search, true).'%');
-                $query->where('()');
+            } else {
+                $search = $db->Quote('%' . $db->escape($search, true) . '%');
+                $query->where('( a.jgroup_id LIKE '.$search.'  OR  a.cgroup_id LIKE '.$search.' )');
 			}
 		}
+
+    //Filtering created_by
+    $filter_created_by = $this->state->get("filter.created_by");
+    if ($filter_created_by) {
+      $query->where("a.created_by = '".$db->escape($filter_created_by)."'");
+    }
 
 		// Add the list ordering clause.
 		$orderCol	= $this->state->get('list.ordering');
 		$orderDirn	= $this->state->get('list.direction');
-        if ($orderCol && $orderDirn) {
-		    $query->order($db->getEscaped($orderCol.' '.$orderDirn));
-        }
+    if ($orderCol && $orderDirn) {
+		  $query->order($db->escape($orderCol.' '.$orderDirn));
+    }
 
 		return $query;
 	}
+
+    public function getItems() {
+        $items = parent::getItems();
+        
+        return $items;
+    }
+
 }

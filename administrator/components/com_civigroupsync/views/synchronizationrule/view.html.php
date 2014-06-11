@@ -1,10 +1,10 @@
 <?php
 /**
- * @version     1.0.0
+ * @version     2.0.0
  * @package     com_civigroupsync
  * @copyright   Copyright (C) 2011. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Created by com_combuilder - http://www.notwebdesign.com
+ * @author      Brian Shaughnessy <brian@lcdservices.biz> - www.lcdservices.biz
  */
 
 // No direct access
@@ -15,7 +15,7 @@ jimport('joomla.application.component.view');
 /**
  * View to edit
  */
-class CiviGroupSyncViewSynchronizationRule extends JView
+class CiviGroupSyncViewSynchronizationRule extends JViewLegacy
 {
 	protected $state;
 	protected $item;
@@ -32,8 +32,7 @@ class CiviGroupSyncViewSynchronizationRule extends JView
 
 		// Check for errors.
 		if (count($errors = $this->get('Errors'))) {
-			JError::raiseError(500, implode("\n", $errors));
-			return false;
+            throw new Exception(implode("\n", $errors));
 		}
 
 		$this->addToolbar();
@@ -45,7 +44,7 @@ class CiviGroupSyncViewSynchronizationRule extends JView
 	 */
 	protected function addToolbar()
 	{
-		JRequest::setVar('hidemainmenu', true);
+		JFactory::getApplication()->input->set('hidemainmenu', true);
 
 		$user		= JFactory::getUser();
 		$isNew		= ($this->item->id == 0);
@@ -54,7 +53,7 @@ class CiviGroupSyncViewSynchronizationRule extends JView
         } else {
             $checkedOut = false;
         }
-		$canDo		= CiviGroupSyncHelper::getActions();
+		$canDo		= CiviGroupSyncBackendHelper::getActions();
 
 		JToolBarHelper::title(JText::_('COM_CIVIGROUPSYNC_TITLE_SYNCHRONIZATIONRULE'), 'generic.png');
 

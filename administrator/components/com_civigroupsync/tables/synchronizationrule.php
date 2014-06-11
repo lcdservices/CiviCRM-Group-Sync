@@ -1,27 +1,26 @@
 <?php
+
 /**
- * @version     1.0.0
+ * @version     2.0.0
  * @package     com_civigroupsync
  * @copyright   Copyright (C) 2011. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Created by com_combuilder - http://www.notwebdesign.com
+ * @author      Brian Shaughnessy <brian@lcdservices.biz> - www.lcdservices.biz
  */
-
 // No direct access
 defined('_JEXEC') or die;
 
 /**
  * synchronizationrule Table class
  */
-class CiviGroupSyncTableSynchronizationRule extends JTable
-{
+class CiviGroupSyncTableSynchronizationRule extends JTable {
+
 	/**
 	 * Constructor
 	 *
 	 * @param JDatabase A database connector object
 	 */
-	public function __construct(&$db)
-	{
+    public function __construct(&$db) {
 		parent::__construct('#__civigroupsync_rules', 'id', $db);
 	}
 
@@ -33,8 +32,14 @@ class CiviGroupSyncTableSynchronizationRule extends JTable
 	 * @see		JTable:bind
 	 * @since	1.5
 	 */
-	public function bind($array, $ignore = '')
-	{
+    public function bind($array, $ignore = '') {
+
+        
+		$input = JFactory::getApplication()->input;
+		$task = $input->getString('task', '');
+		if(($task == 'save' || $task == 'apply') && (!JFactory::getUser()->authorise('core.edit.state','com_civigroupsync') && $array['state'] == 1)){
+			$array['state'] = 0;
+		}
 		if (isset($array['params']) && is_array($array['params'])) {
 			$registry = new JRegistry();
 			$registry->loadArray($array['params']);
@@ -46,8 +51,38 @@ class CiviGroupSyncTableSynchronizationRule extends JTable
 			$registry->loadArray($array['metadata']);
 			$array['metadata'] = (string)$registry;
 		}
+        if (!JFactory::getUser()->authorise('core.admin', 'com_civigroupsync.synchronizationrule.' . $array['id'])) {
+            $actions = JFactory::getACL()->getActions('com_civigroupsync', 'synchronizationrule');
+            $default_actions = JFactory::getACL()->getAssetRules('com_civigroupsync.synchronizationrule.' . $array['id'])->getData();
+            $array_jaccess = array();
+            foreach ($actions as $action) {
+                $array_jaccess[$action->name] = $default_actions[$action->name];
+            }
+            $array['rules'] = $this->JAccessRulestoArray($array_jaccess);
+        }
+        //Bind the rules for ACL where supported.
+        if (isset($array['rules']) && is_array($array['rules'])) {
+            $this->setRules($array['rules']);
+        }
+
 		return parent::bind($array, $ignore);
 	}
+
+    /**
+     * This function convert an array of JAccessRule objects into an rules array.
+     * @param type $jaccessrules an arrao of JAccessRule objects.
+     */
+    private function JAccessRulestoArray($jaccessrules) {
+        $rules = array();
+        foreach ($jaccessrules as $action => $jaccess) {
+            $actions = array();
+            foreach ($jaccess->getData() as $group => $allow) {
+                $actions[$group] = ((bool) $allow);
+            }
+            $rules[$action] = $actions;
+        }
+        return $rules;
+    }
 
     /**
     * Overloaded check function
@@ -75,8 +110,7 @@ class CiviGroupSyncTableSynchronizationRule extends JTable
      * @return    boolean    True on success.
      * @since    1.0.4
      */
-    public function publish($pks = null, $state = 1, $userId = 0)
-    {
+    public function publish($pks = null, $state = 1, $userId = 0) {
         // Initialise variables.
         $k = $this->_tbl_key;
 
@@ -86,8 +120,7 @@ class CiviGroupSyncTableSynchronizationRule extends JTable
         $state  = (int) $state;
 
         // If there are no primary keys set check to see if the instance key is set.
-        if (empty($pks))
-        {
+        if (empty($pks)) {
             if ($this->$k) {
                 $pks = array($this->$k);
             }
@@ -104,8 +137,7 @@ class CiviGroupSyncTableSynchronizationRule extends JTable
         // Determine if there is checkin support for the table.
         if (!property_exists($this, 'checked_out') || !property_exists($this, 'checked_out_time')) {
             $checkin = '';
-        }
-        else {
+        } else {
             $checkin = ' AND (checked_out = 0 OR checked_out = '.(int) $userId.')';
         }
 
@@ -125,11 +157,9 @@ class CiviGroupSyncTableSynchronizationRule extends JTable
         }
 
         // If checkin is supported and all rows were adjusted, check them in.
-        if ($checkin && (count($pks) == $this->_db->getAffectedRows()))
-        {
-            // Checkin the rows.
-            foreach($pks as $pk)
-            {
+        if ($checkin && (count($pks) == $this->_db->getAffectedRows())) {
+            // Checkin each row.
+            foreach ($pks as $pk) {
                 $this->checkin($pk);
             }
         }
@@ -143,7 +173,44 @@ class CiviGroupSyncTableSynchronizationRule extends JTable
         return true;
     }
 
+    /**
+     * Define a namespaced asset name for inclusion in the #__assets table
+     * @return string The asset name 
+     *
+     * @see JTable::_getAssetName 
+     */
+    protected function _getAssetName() {
+        $k = $this->_tbl_key;
+        return 'com_civigroupsync.synchronizationrule.' . (int) $this->$k;
+    }
+
+    /**
+     * Returns the parent asset's id. If you have a tree structure, retrieve the parent's id using the external key field
+     *
+     * @see JTable::_getAssetParentId 
+     */
+    protected function _getAssetParentId(JTable $table = null, $id = null) {
+        // We will retrieve the parent-asset from the Asset-table
+        $assetParent = JTable::getInstance('Asset');
+        // Default: if no asset-parent can be found we take the global asset
+        $assetParentId = $assetParent->getRootId();
+        // The item has the component as asset-parent
+        $assetParent->loadByName('com_civigroupsync');
+        // Return the found asset-parent-id
+        if ($assetParent->id) {
+            $assetParentId = $assetParent->id;
+        }
+        return $assetParentId;
+    }
+
+    public function delete($pk = null) {
+        $this->load($pk);
+        $result = parent::delete($pk);
+        if ($result) {
 
 
+        }
+        return $result;
+    }
 
 }

@@ -9,13 +9,12 @@
 
 defined('JPATH_BASE') or die;
 
-jimport('joomla.html.html');
 jimport('joomla.form.formfield');
 
 /**
  * Supports an HTML select list of categories
  */
-class JFormFieldCustom_field extends JFormField
+class JFormFieldCreatedby extends JFormField
 {
 	/**
 	 * The form field type.
@@ -23,7 +22,7 @@ class JFormFieldCustom_field extends JFormField
 	 * @var		string
 	 * @since	1.6
 	 */
-	protected $type = 'text';
+	protected $type = 'createdby';
 
 	/**
 	 * Method to get the field input markup.
@@ -35,7 +34,18 @@ class JFormFieldCustom_field extends JFormField
 	{
 		// Initialize variables.
 		$html = array();
-
+        
+        
+		//Load user
+		$user_id = $this->value;
+		if ($user_id) {
+			$user = JFactory::getUser($user_id);
+		} else {
+			$user = JFactory::getUser();
+			$html[] = '<input type="hidden" name="'.$this->name.'" value="'.$user->id.'" />';
+		}
+		$html[] = "<div>".$user->name." (".$user->username.")</div>";
+        
 		return implode($html);
 	}
 }

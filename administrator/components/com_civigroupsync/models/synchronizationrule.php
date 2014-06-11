@@ -1,10 +1,10 @@
 <?php
 /**
- * @version     1.0.0
+ * @version     2.0.0
  * @package     com_civigroupsync
  * @copyright   Copyright (C) 2011. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Created by com_combuilder - http://www.notwebdesign.com
+ * @author      Brian Shaughnessy <brian@lcdservices.biz> - www.lcdservices.biz
  */
 
 // No direct access.
@@ -53,6 +53,8 @@ class CiviGroupSyncModelsynchronizationrule extends JModelAdmin
 
 		// Get the form.
 		$form = $this->loadForm('com_civigroupsync.synchronizationrule', 'synchronizationrule', array('control' => 'jform', 'load_data' => $loadData));
+        
+        
 		if (empty($form)) {
 			return false;
 		}
@@ -73,6 +75,7 @@ class CiviGroupSyncModelsynchronizationrule extends JModelAdmin
 
 		if (empty($data)) {
 			$data = $this->getItem();
+            
 		}
 
 		return $data;
@@ -102,7 +105,7 @@ class CiviGroupSyncModelsynchronizationrule extends JModelAdmin
 	 *
 	 * @since	1.6
 	 */
-	protected function prepareTable(&$table)
+	protected function prepareTable($table)
 	{
 		jimport('joomla.filter.output');
 

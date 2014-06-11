@@ -13,7 +13,7 @@ defined( '_JEXEC' ) or die( 'Restricted access' );
  * Installer script for package
  */
 class com_civiGroupSyncInstallerScript {
-
+        
   /**
    * method to run during installation
    * installs and enables the plugin

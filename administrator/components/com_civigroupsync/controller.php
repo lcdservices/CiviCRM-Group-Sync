@@ -1,17 +1,16 @@
 <?php
+
 /**
- * @version     1.0.0
+ * @version     2.0.0
  * @package     com_civigroupsync
  * @copyright   Copyright (C) 2011. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Created by com_combuilder - http://www.notwebdesign.com
+ * @author      Brian Shaughnessy <brian@lcdservices.biz> - www.lcdservices.biz
  */
-
-
 // No direct access
 defined('_JEXEC') or die;
 
-class CiviGroupSyncController extends JController
+class CiviGroupSyncController extends JControllerLegacy
 {
 	/**
 	 * Method to display a view.
@@ -22,15 +21,15 @@ class CiviGroupSyncController extends JController
 	 * @return	JController		This object to support chaining.
 	 * @since	1.5
 	 */
-	public function display($cachable = false, $urlparams = false)
-	{
+    public function display($cachable = false, $urlparams = false) {
 		require_once JPATH_COMPONENT.'/helpers/civigroupsync.php';
 
-		$view		= JRequest::getCmd('view', 'synchronizationrules');
-        JRequest::setVar('view', $view);
+        $view = JFactory::getApplication()->input->getCmd('view', 'synchronizationrules');
+        JFactory::getApplication()->input->set('view', $view);
 
-		parent::display();
+        parent::display($cachable, $urlparams);
 
 		return $this;
 	}
+
 }

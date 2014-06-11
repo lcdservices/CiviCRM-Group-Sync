@@ -2,26 +2,26 @@
 <extension type="component" version="1.6.0" method="upgrade">
 	<name>CiviGroupSync</name>
 	<creationDate>2011-07-23</creationDate>
-	<copyright>Copyright (C) 2011. All rights reserved.</copyright>
+	<copyright>Copyright (C) 2014. All rights reserved.</copyright>
 	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
-    <author>Brian Shaughnessy</author>
+  <author>Brian Shaughnessy</author>
 	<authorEmail>brian@lcdservices.biz</authorEmail>
 	<authorUrl>www.lcdservices.biz</authorUrl>
-	<version>1.0.0</version>
+	<version>2.0.0</version>
 	<description>Sync CiviCRM groups with Joomla ACL groups. Using this tool you can dynamically manage access control based on CiviCRM group subscription.</description>
     
-    <scriptfile>script.php</scriptfile>
+  <scriptfile>script.php</scriptfile>
 
-	<install> <!-- Runs on install -->
-    	<sql>
-        	<file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
-  		</sql>
-    </install>
-    <uninstall> <!-- Runs on uninstall -->
-    	<sql>
-        	<file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
-  		</sql>
-   </uninstall>
+	<install>
+  	<sql>
+     	<file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+  	</sql>
+  </install>
+  <uninstall>
+   	<sql>
+     	<file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+  	</sql>
+  </uninstall>
 
 	<files folder="components/com_civigroupsync">
 		<filename>index.html</filename>
@@ -46,11 +46,11 @@
 			<language tag="en-GB">en-GB.com_civigroupsync.ini</language>
 			<language tag="en-GB">en-GB.com_civigroupsync.sys.ini</language>
 		</languages>
-    </administration>
+  </administration>
 	
-    <plugins>
-        <plugin folder="plugins/system" plugin="civigroupsync" name="CiviCRM Group Sync" group="system" />
-    </plugins>
+  <plugins>
+    <plugin folder="plugins/system" plugin="civigroupsync" name="CiviCRM Group Sync" group="system" />
+  </plugins>
     
 </extension>
 
