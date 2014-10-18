@@ -31,7 +31,7 @@ class com_civiGroupSyncInstallerScript {
     // Install plugins
     foreach($manifest->plugins->plugin as $plugin) {
       $attributes = $plugin->attributes();
-      $plg = $source . DS . $attributes['folder'].DS.$attributes['plugin'];
+      $plg = $source.'/'.$attributes['folder'].'/'.$attributes['plugin'];
       $installer->install($plg);
     }
 

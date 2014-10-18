@@ -31,7 +31,7 @@ class com_civiGroupSyncInstallerScript {
     // Install plugins
     foreach($manifest->plugins->plugin as $plugin) {
       $attributes = $plugin->attributes();
-      $plg = $source . DS . $attributes['folder'].DS.$attributes['plugin'];
+      $plg = $source.'/'.$attributes['folder'].'/'.$attributes['plugin'];
       $installer->install($plg);
     }
 
@@ -42,7 +42,7 @@ class com_civiGroupSyncInstallerScript {
     $columnEnabled = $db->quoteName("enabled");
 
     // Enable plugins
-    $db->setQuery( "
+    $db->setQuery("
       UPDATE $tableExtensions
       SET $columnEnabled = 1
       WHERE $columnElement = 'civigroupsync'
