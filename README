@@ -14,3 +14,4 @@ Please use the github issue tracker to report any bugs.
 ChangeLog:
 
 - v2.0.0 :: Joomla 3.3.x/CiviCRM 4.4.x compatibility
+- v2.0.1 :: remove references to DS constant for Joomla 3.3.x installation
