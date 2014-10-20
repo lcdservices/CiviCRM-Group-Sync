@@ -234,8 +234,10 @@ class  plgSystemCiviGroupSync extends JPlugin
     }
 
     //if we are not in the right context, exit
-    if ( !in_array( $context, array('com_civigroupsync.synchronizationrule',
-                                    'com_civigroupsync.synchronizationrules') ) ) {
+    if ( !in_array( $context, array(
+      'com_civigroupsync.synchronizationrule',
+      'com_civigroupsync.synchronizationrules') )
+    ) {
       return true;
     }
 
@@ -254,15 +256,11 @@ class  plgSystemCiviGroupSync extends JPlugin
     //update Joomla groups
     $cGroupContacts = CRM_Contact_BAO_Group::getGroupContacts($cgroup_id);
     foreach ( $cGroupContacts as $cGroupContact ) {
-
-      $cid     = $cGroupContact['contact_id'];
-      $juser   = civicrm_api( "UFMatch",
-                              "get",
-                              array (
-                                'version'    => '3',
-                                'contact_id' => $cid
-                              )
-      );
+      $cid = $cGroupContact['contact_id'];
+      $juser = civicrm_api( "UFMatch", "get", array (
+        'version' => '3',
+        'contact_id' => $cid
+      ));
 
       //if we can't match with a Joomla user, move to next record
       if ( $juser['count'] == 0 ) {
@@ -287,14 +285,10 @@ class  plgSystemCiviGroupSync extends JPlugin
     //update CiviCRM groups
     $jGroupContacts = JAccess::getUsersByGroup($jgroup_id);
     foreach ( $jGroupContacts as $juserid ) {
-
-      $cuser   = civicrm_api( "UFMatch",
-                              "get",
-                              array (
-                                'version' => '3',
-                                'uf_id'   => $juserid
-                              )
-      );
+      $cuser   = civicrm_api( "UFMatch", "get", array(
+        'version' => '3',
+        'uf_id' => $juserid
+      ));
 
       //if we can't match with a CiviCRM user, move to next record
       if ( $cuser['count'] == 0 ) {
@@ -304,14 +298,11 @@ class  plgSystemCiviGroupSync extends JPlugin
       $cuserid = $cuser['values'][$cuser['id']]['contact_id'];
 
       //add to CiviCRM group
-      civicrm_api( "GroupContact",
-                   "create",
-                   array (
-                     'version'    => '3',
-                     'group_id'   => $cgroup_id,
-                     'contact_id' => $cuserid
-                   )
-      );
+      civicrm_api( "GroupContact", "create", array(
+        'version' => '3',
+        'group_id' => $cgroup_id,
+        'contact_id' => $cuserid
+      ));
     }
 
     return true;
@@ -358,13 +349,10 @@ class  plgSystemCiviGroupSync extends JPlugin
     }
 
     //get contacts group memberships
-    $contactGroups = civicrm_api( "GroupContact",
-                                  "get",
-                                  array (
-                                    'version'    => '3',
-                                    'contact_id' => $cid
-                                  )
-    );
+    $contactGroups = civicrm_api("GroupContact", "get", array(
+      'version' => '3',
+      'contact_id' => $cid
+    ));
 
     //now cycle through our list of multiple civiGroups and determine if contact is member of others
     foreach ( $civiGroups as $civiGroup ) {
