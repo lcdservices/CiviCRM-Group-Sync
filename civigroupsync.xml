@@ -7,7 +7,7 @@
   <author>Brian Shaughnessy</author>
 	<authorEmail>brian@lcdservices.biz</authorEmail>
 	<authorUrl>www.lcdservices.biz</authorUrl>
-	<version>2.0.1</version>
+	<version>2.0.2</version>
 	<description>Sync CiviCRM groups with Joomla ACL groups. Using this tool you can dynamically manage access control based on CiviCRM group subscription.</description>
     
   <scriptfile>script.php</scriptfile>
