@@ -3,11 +3,11 @@
   <name>CiviGroupSync</name>
   <author>Brian Shaughnessy</author>
   <creationDate>2011-07-23</creationDate>
-  <copyright>© 2011. All rights reserved.</copyright>
+  <copyright>© 2015. All rights reserved.</copyright>
   <license>GNU/GPL</license>
-  <authorEmail>development@lcdservices.biz</authorEmail>
+  <authorEmail>dev@lcdservices.biz</authorEmail>
   <authoreUrl>http://www.lcdservices.biz</authoreUrl>
-  <version>1.0</version>
+  <version>2.1</version>
   <description>Companion plugin for the CiviCRM Group Sync component, providing synchronization of Joomla ACL Groups with CiviCRM Groups.</description>
   <files>
     <filename plugin="civigroupsync">civigroupsync.php</filename>

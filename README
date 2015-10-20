@@ -1,7 +1,7 @@
 CiviCRM Group Sync
 
 Author: Brian Shaughnessy
-Url:    www.lcdservices.biz
+Url: www.lcdservices.biz
 
 CiviCRM Group Sync is used to synchronize CiviCRM groups with Joomla 1.6+ ACL groups. After creating a sync rule using the component interface, any contacts added to a CiviCRM group will be added to corresponding linked Joomla ACL groups (provided the contact has an associated user record), and vice versa.
 
@@ -16,3 +16,4 @@ ChangeLog:
 - v2.0.0 :: Joomla 3.3.x/CiviCRM 4.4.x compatibility
 - v2.0.1 :: remove references to DS constant for Joomla 3.3.x installation
 - v2.0.2 :: condition the onContentAfterSave event for J2.5 and J3.0 compatibility
+- v2.1.0 :: updates for Joomla 3.4.4 and CiviCRM 4.6.9 compatibility; code cleanup; ensure we trigger on ufmatch creation

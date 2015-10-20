@@ -34,10 +34,10 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
     $app = JFactory::getApplication();
 
     // Instantiate CiviCRM
-    require_once JPATH_ROOT.'/'.'administrator/components/com_civicrm/civicrm.settings.php';
+    require_once JPATH_ROOT.'/administrator/components/com_civicrm/civicrm.settings.php';
     require_once 'CRM/Core/Config.php';
     require_once 'api/api.php';
-    $civiConfig =& CRM_Core_Config::singleton( );
+    $config = CRM_Core_Config::singleton( );
 
     // Get sync mappings
     $mappings = self::getCiviGroupSyncMappings();
@@ -47,67 +47,44 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
 
     // Retrieve Joomla User ID and CiviCRM Contact ID
     $juserid = $user['id'];
-    $cuser   = civicrm_api(
-      'UFMatch',
-      'get',
-      array (
+    $cuser = civicrm_api('UFMatch', 'get', array(
         'version' => '3',
         'uf_id'   => $juserid
-      )
-    );
+    ));
+
+    //CRM_Core_Error::debug_var('$user', $user, true, true, 'cgs');
+    //CRM_Core_Error::debug_var('$cuser', $cuser, true, true, 'cgs');
 
     if ( $cuser['count'] > 0 ) {
       $cuserid = $cuser['values'][$cuser['id']]['contact_id'];
     }
-    //if contact does not exist, we should create it here
-    //disable as it creates conflict with user create via profile
-    /*else {
-      $params = array(
-        'version'      => 3,
-        'contact_type' => 'Individual',
-        'last_name'    => $user['email'],
-        'dupe_check'   => 1,
-        'api.email.create' =>
-        array(
-          'email'            => $user['email'],
-          'location_type_id' => 6,
-          'is_primary'       => 1,
-        ),
-      );
-      $contact = civicrm_api( 'contact', 'create', $params );
-      $cuserid = $contact['id'];
-      
-      //also construct uf_match record
-      $sql = "
-        INSERT INTO civicrm_uf_match (domain_id, uf_id, uf_name, contact_id)
-        VALUES ( 1, $juserid, '{$user['email']}', $cuserid );";
-      CRM_Core_DAO::executeQuery($sql);
-    }*/
+    else {
+      return;
+    }
 
     //get the users ACL groups; the $user object is unreliable so retrieve using helper
     $jUserGroups = JUserHelper::getUserGroups($juserid);
         
+    //CRM_Core_Error::debug_var('jUserGroups', $jUserGroups, true, true, 'cgs');
+    //CRM_Core_Error::debug_var('mappings', $mappings, true, true, 'cgs');
+
     //cycle through mappings and add to/remove from CiviCRM groups
     foreach ( $mappings as $mapping ) {
       if ( in_array($mapping['jgroup_id'], $jUserGroups) ) {
-        civicrm_api( "GroupContact",
-                     "create",
-                     array (
+        $gc1 = civicrm_api("GroupContact", "create", array(
                        'version'    => '3',
                        'group_id'   => $mapping['cgroup_id'],
                        'contact_id' => $cuserid
-                     )
-        );
+        ));
+        //CRM_Core_Error::debug_var('gc1', $gc1, true, true, 'cgs');
       }
       else {
-        civicrm_api( "GroupContact",
-                     "delete",
-                     array (
+        $gc2 = civicrm_api("GroupContact", "delete", array(
                        'version'    => '3',
                        'group_id'   => $mapping['cgroup_id'],
                        'contact_id' => $cuserid
-                     )
-        );
+        ));
+        //CRM_Core_Error::debug_var('gc2', $gc2, true, true, 'cgs');
       }
     }
 
@@ -131,8 +108,12 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
    * @since   1.6
    */
   public function civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
+    //CRM_Core_Error::debug_var('post $op', $op, true, true, 'cgs');
+    //CRM_Core_Error::debug_var('post $objectName', $objectName, true, true, 'cgs');
+    //CRM_Core_Error::debug_var('post $objectId', $objectId, true, true, 'cgs');
+    //CRM_Core_Error::debug_var('post $objectRef', $objectRef, true, true, 'cgs');
 
-    if ( $objectName != 'GroupContact' ) {
+    if ( !in_array($objectName, array('GroupContact', 'UFMatch')) ) {
       return;
     }
 
@@ -145,28 +126,45 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
     // Instantiate CiviCRM
     require_once 'CRM/Core/Config.php';
     require_once 'api/api.php';
-    $civiConfig =& CRM_Core_Config::singleton( );
+    $config = CRM_Core_Config::singleton( );
 
     // Get IDs
-    $gid   = $objectId;
+    switch ($objectName) {
+      case 'GroupContact':
+        $gids = array($objectId);
     $cid   = $objectRef[0];
-    $juser = civicrm_api( "UFMatch",
-                          "get",
-                          array (
+        $juser = civicrm_api( "UFMatch", "get", array(
                             'version'    => '3',
                             'contact_id' => $cid
-                          )
-    );
+        ));
+
     //if we can't match with a Joomla user, exit
     if ( $juser['count'] == 0 ) {
       return;
     }
     $juserid = $juser['values'][$juser['id']]['uf_id'];
+        break;
+
+      case 'UFMatch':
+        $cid = $objectRef->contact_id;
+        $juserid = $objectRef->uf_id;
+        $gids = array();
+
+        $contactGroups = civicrm_api("GroupContact", "get", array(
+          'version' => '3',
+          'contact_id' => $cid
+        ));
+
+        foreach ($contactGroups['values'] as $cg) {
+          $gids[] = $cg['group_id'];
+        }
+        break;
+    }
 
     // Cycle through mappings and locate jgroup_id
     $jgroup_ids = array();
     foreach ( $mappings as $mapping ) {
-      if ( $mapping['cgroup_id'] == $gid ){
+      if (in_array($mapping['cgroup_id'], $gids)) {
         $jgroup_ids[] = $mapping['jgroup_id'];
       }
     }
@@ -191,7 +189,7 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
         //remove from Joomla group
         //first check to make sure contact has no other C groups associated with this J group
         foreach ( $jgroup_ids as $jgroup_id ) {
-          if ( self::countCiviJoomlaGroups($mappings, $jgroup_id, $gid, $cid) > 1 ) {
+          if ( self::countCiviJoomlaGroups($mappings, $jgroup_id, $gids, $cid) > 1 ) {
             break;
           }
           else {
@@ -330,7 +328,7 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
    * @return  count of contact-group memberships mapped to passed joomla group
    * @since   1.6
    */
-  public function countCiviJoomlaGroups($mappings, $jgroup_id, $gid, $cid) {
+  public function countCiviJoomlaGroups($mappings, $jgroup_id, $gids, $cid) {
 
     //start count at 1 for group we are removing
     $countCiviGroups = 1;
@@ -357,7 +355,7 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
     //now cycle through our list of multiple civiGroups and determine if contact is member of others
     foreach ( $civiGroups as $civiGroup ) {
       //skip the Civi group ID we are working with
-      if ( $civiGroup == $gid ) {
+      if ( in_array($civiGroup, $gids) ) {
         continue;
       }
       foreach ( $contactGroups['values'] as $contactGroup ) {
