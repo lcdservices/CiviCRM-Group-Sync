@@ -1,9 +1,9 @@
 <?php
 /**
- * @version     2011-07-23 20:07:15$
+ * @version     2019-04-06
  * @author      Brian Shaughnessy
  * @package     CiviCRM Group Sync
- * @copyright   Copyright (C) 2011- . All rights reserved.
+ * @copyright   Copyright (C) 2019. All rights reserved.
  * @license     GNU GPL
  */
 
@@ -49,5 +49,9 @@ class com_civiGroupSyncInstallerScript {
       AND $columnType = 'plugin'
     ");
     $db->query();
+  }
+
+  function update($parent) {
+    $this->install($parent);
   }
 }
