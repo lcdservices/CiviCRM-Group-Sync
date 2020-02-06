@@ -83,10 +83,15 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
           //CRM_Core_Error::debug_var('gc1', $gc1, true, true, 'cgs');
         }
         else {
-          $gc2 = civicrm_api3("GroupContact", "delete", [
+          $gc2 = civicrm_api3("GroupContact", "get", [
             'group_id' => $mapping['cgroup_id'],
             'contact_id' => $cuserid
           ]);
+          if ($gc2['id']) {
+            civicrm_api3("GroupContact", "delete", [
+              'id' => $gc2['id'],
+            ]);
+          }
           //CRM_Core_Error::debug_var('gc2', $gc2, true, true, 'cgs');
         }
       }
