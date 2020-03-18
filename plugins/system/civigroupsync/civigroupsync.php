@@ -13,6 +13,9 @@ jimport( 'joomla.plugin.plugin' );
 
 class  plgSystemCiviGroupSyncLCD extends JPlugin
 {
+
+  // Avoid buggy loops by refusing to process the same uid/gid pair in the same run.
+  var $processedPairs = array();
   
   /*
    * Joomla -> CiviCRM
@@ -74,6 +77,11 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
 
     //cycle through mappings and add to/remove from CiviCRM groups
     foreach ($mappings as $mapping) {
+      // Avoid processing this person/group pair more than once per run.
+      if ($this->testProcessedPair($mapping['jgroup_id'], $juserid)) {
+        continue;
+      }
+
       try {
         if (in_array($mapping['jgroup_id'], $jUserGroups)) {
           $gc1 = civicrm_api3("GroupContact", "create", [
@@ -171,6 +179,10 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
     $jgroup_ids = array();
     foreach ($mappings as $mapping) {
       if (in_array($mapping['cgroup_id'], $gids)) {
+        // Avoid processing this person/group pair more than once per run.
+        if ($this->testProcessedPair($mapping['jgroup_id'], $juserid)) {
+          continue;
+        }
         $jgroup_ids[] = $mapping['jgroup_id'];
       }
     }
@@ -187,6 +199,10 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
       case 'edit':
         //add to Joomla group
         foreach ($jgroup_ids as $jgroup_id) {
+          // Avoid processing this person/group pair more than once per run.
+          if ($this->testProcessedPair($jgroup_id, $juserid)) {
+            continue;
+          }
           JUserHelper::addUserToGroup($juserid, $jgroup_id);
         }
         break;
@@ -199,6 +215,9 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
             break;
           }
           else {
+            if ($this->testProcessedPair($jgroup_id, $juserid)) {
+              continue;
+            }
             JUserHelper::removeUserFromGroup($juserid, $jgroup_id);
           }
         }
@@ -278,6 +297,10 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
       $user = JFactory::getUser($juserid);
       if ($user->id) {
         //add to Joomla group
+        // Avoid processing this person/group pair more than once per run.
+        if ($this->testProcessedPair($jgroup_id, $juserid)) {
+          continue;
+        }
         JUserHelper::addUserToGroup($juserid, $jgroup_id);
       }
       else {
@@ -303,6 +326,11 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
       }
 
       $cuserid = $cuser['values'][$cuser['id']]['contact_id'];
+
+      // Avoid processing this person/group pair more than once per run.
+      if ($this->testProcessedPair($jgroup_id, $juserid)) {
+        continue;
+      }
 
       //add to CiviCRM group
       try {
@@ -381,6 +409,24 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
 
     return $countCiviGroups;
   } //end countCiviJoomlaGroups
+
+  /**
+   * Test whether this pair has been processed (and record that it has been)
+   * @param int $gid System ID of the Joomla user group
+   * @param int $pid System ID of the Joomla user
+   */
+  function testProcessedPair($gid, $pid) {
+    $isProcessed = FALSE;
+    $key = "$gid|$pid";
+    if (!in_array($key, $this->processedPairs)) {
+      $isProcessed = FALSE;
+      $this->processedPairs[] = $key;
+    }
+    else {
+      $isProcessed = TRUE;
+    }
+    return $isProcessed;
+  }
 }
 
 if (version_compare(JVERSION, '3.0', '<')) {
