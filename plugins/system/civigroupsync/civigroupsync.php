@@ -28,15 +28,17 @@ class plgSystemCiviGroupSync extends JPlugin
    * @since   1.6
    * @throws  Exception on error.
    */
-  function onUserAfterSave( $user, $isnew, $success, $msg ) {
+  function onUserAfterSave($user, $isnew, $success, $msg) {
+    //CRM_Core_Error::debug_var('onUserAfterSave $user', $user, true, true, 'cgs');
+    //CRM_Core_Error::debug_var('onUserAfterSave $isnew', $isnew, true, true, 'cgs');
+    //CRM_Core_Error::debug_var('onUserAfterSave $success', $success, true, true, 'cgs');
+    //CRM_Core_Error::debug_var('onUserAfterSave $msg', $msg, true, true, 'cgs');
 
     jimport('joomla.user.helper');
     JFactory::getApplication();
 
     // Instantiate CiviCRM
     require_once JPATH_ROOT.'/administrator/components/com_civicrm/civicrm.settings.php';
-    require_once 'CRM/Core/Config.php';
-    require_once 'api/api.php';
     CRM_Core_Config::singleton( );
 
     // Get sync mappings
@@ -74,18 +76,25 @@ class plgSystemCiviGroupSync extends JPlugin
 
     //cycle through mappings and add to/remove from CiviCRM groups
     foreach ($mappings as $mapping) {
+      $userInJoomlaGroup = in_array($mapping['jgroup_id'], $jUserGroups);
+      $contactInCiviGroup = self::contactInGroup($cuserid, $mapping['cgroup_id']);
+      //CRM_Core_Error::debug_var('$userInJoomlaGroup', $userInJoomlaGroup, true, true, 'cgs');
+      //CRM_Core_Error::debug_var('$contactInCiviGroup', $contactInCiviGroup, true, true, 'cgs');
+
+
       try {
-        if (in_array($mapping['jgroup_id'], $jUserGroups)) {
+        if ($userInJoomlaGroup && !$contactInCiviGroup
+        ) {
           $gc1 = civicrm_api3("GroupContact", "create", [
             'group_id' => $mapping['cgroup_id'],
-            'contact_id' => $cuserid
+            'contact_id' => $cuserid,
           ]);
           //CRM_Core_Error::debug_var('gc1', $gc1, true, true, 'cgs');
         }
-        else {
+        elseif (!$userInJoomlaGroup && $contactInCiviGroup) {
           $gc2 = civicrm_api3("GroupContact", "delete", [
             'group_id' => $mapping['cgroup_id'],
-            'contact_id' => $cuserid
+            'contact_id' => $cuserid,
           ]);
           //CRM_Core_Error::debug_var('gc2', $gc2, true, true, 'cgs');
         }
@@ -118,7 +127,7 @@ class plgSystemCiviGroupSync extends JPlugin
     //CRM_Core_Error::debug_var('post $objectId', $objectId, true, true, 'cgs');
     //CRM_Core_Error::debug_var('post $objectRef', $objectRef, true, true, 'cgs');
 
-    if (!in_array($objectName, array('GroupContact', 'UFMatch'))) {
+    if (!in_array($objectName, ['GroupContact', 'UFMatch'])) {
       return;
     }
 
@@ -131,8 +140,11 @@ class plgSystemCiviGroupSync extends JPlugin
     // Get IDs
     switch ($objectName) {
       case 'GroupContact':
-        $gids = array($objectId);
+        $gids = [$objectId];
+
+        //TODO this falsely assumes we are only adding one contact to the group
         $cid = $objectRef[0];
+
         try {
           $juser = civicrm_api3("UFMatch", "get", [
             'contact_id' => $cid,
@@ -152,7 +164,7 @@ class plgSystemCiviGroupSync extends JPlugin
       case 'UFMatch':
         $cid = $objectRef->contact_id;
         $juserid = $objectRef->uf_id;
-        $gids = array();
+        $gids = [];
 
         try {
           $contactGroups = civicrm_api3("GroupContact", "get", [
@@ -168,7 +180,7 @@ class plgSystemCiviGroupSync extends JPlugin
     }
 
     // Cycle through mappings and locate jgroup_id
-    $jgroup_ids = array();
+    $jgroup_ids = [];
     foreach ($mappings as $mapping) {
       if (in_array($mapping['cgroup_id'], $gids)) {
         $jgroup_ids[] = $mapping['jgroup_id'];
@@ -225,6 +237,8 @@ class plgSystemCiviGroupSync extends JPlugin
    * @since   1.6
    */
   public function onContentAfterSave($context, $article, $isNew) {
+
+
     $ruleID = $article->id;
     $ruleState = $article->state;
     $jgroup_id = $article->jgroup_id;
@@ -236,18 +250,16 @@ class plgSystemCiviGroupSync extends JPlugin
     }
 
     //if we are not in the right context, exit
-    if (!in_array($context, array(
+    if (!in_array($context, [
       'com_civigroupsync.synchronizationrule',
-      'com_civigroupsync.synchronizationrules'))
+      'com_civigroupsync.synchronizationrules'
+    ])
     ) {
       return true;
     }
 
     //instantiate CiviCRM
     require_once JPATH_ROOT.'/administrator/components/com_civicrm/civicrm.settings.php';
-    require_once 'CRM/Core/Config.php';
-    require_once 'CRM/Contact/BAO/Group.php';
-    require_once 'api/api.php';
     CRM_Core_Config::singleton( );
 
     //include Joomla files
@@ -327,7 +339,7 @@ class plgSystemCiviGroupSync extends JPlugin
 
     $db = JFactory::getDbo();
     $db->setQuery("SELECT * FROM #__civigroupsync_rules WHERE state = 1");
-    $mappings = $db->loadAssocList($key='id');
+    $mappings = $db->loadAssocList($key = 'id');
 
     return $mappings;
 
@@ -345,7 +357,7 @@ class plgSystemCiviGroupSync extends JPlugin
     $countCiviGroups = 1;
 
     //get all cgroup_ids for passed jgroup_id
-    $civiGroups = array();
+    $civiGroups = [];
     foreach ($mappings as $mapping) {
       if ($mapping['jgroup_id'] == $jgroup_id) {
         $civiGroups[] = $mapping['cgroup_id'];
@@ -381,4 +393,29 @@ class plgSystemCiviGroupSync extends JPlugin
 
     return $countCiviGroups;
   } //end countCiviJoomlaGroups
+
+  /**
+   * @param $cId
+   * @param $cgId
+   *
+   * @return bool
+   *
+   * check if contact is in a specific CiviCRM group
+   */
+  function contactInGroup($cId, $cgId) {
+    try {
+      $cg = civicrm_api3('GroupContact', 'get', [
+        'contact_id' => $cId,
+        'group_id' => $cgId,
+      ]);
+      //CRM_Core_Error::debug_var('contactInGroup $cg', $cg, true, true, 'cgs');
+
+      if ($cg['count']) {
+        return TRUE;
+      }
+    }
+    catch (CiviCRM_API3_Exception $e) {}
+
+    return FALSE;
+  }
 }
