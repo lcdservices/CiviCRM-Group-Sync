@@ -11,7 +11,7 @@ defined( '_JEXEC' ) or die( 'Restricted access' );
 
 jimport( 'joomla.plugin.plugin' );
 
-class  plgSystemCiviGroupSyncLCD extends JPlugin
+class plgSystemCiviGroupSync extends JPlugin
 {
   
   /*
@@ -224,7 +224,7 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
    * @param   bool        If the content is just about to be created
    * @since   1.6
    */
-  public function onContentAfterSaveLCD($context, $article, $isNew) {
+  public function onContentAfterSave($context, $article, $isNew) {
     $ruleID = $article->id;
     $ruleState = $article->state;
     $jgroup_id = $article->jgroup_id;
@@ -381,19 +381,4 @@ class  plgSystemCiviGroupSyncLCD extends JPlugin
 
     return $countCiviGroups;
   } //end countCiviJoomlaGroups
-}
-
-if (version_compare(JVERSION, '3.0', '<')) {
-  class plgSystemCiviGroupSync extends plgSystemCiviGroupSyncLCD {
-    public function onContentAfterSave($context, &$article, $isNew) {
-      $this->onContentAfterSaveLCD( $context, $article, $isNew );
-    }
-  }
-}
-else {
-  class plgSystemCiviGroupSync extends plgSystemCiviGroupSyncLCD {
-    public function onContentAfterSave($context, $article, $isNew) {
-      $this->onContentAfterSaveLCD( $context, $article, $isNew );
-    }
-  }
 }
