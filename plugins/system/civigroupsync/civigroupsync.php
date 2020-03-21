@@ -92,11 +92,14 @@ class plgSystemCiviGroupSync extends JPlugin
           //CRM_Core_Error::debug_var('gc1', $gc1, true, true, 'cgs');
         }
         elseif (!$userInJoomlaGroup && $contactInCiviGroup) {
-          $gc2 = civicrm_api3("GroupContact", "delete", [
-            'group_id' => $mapping['cgroup_id'],
-            'contact_id' => $cuserid,
-          ]);
-          //CRM_Core_Error::debug_var('gc2', $gc2, true, true, 'cgs');
+          //confirm existence before attempting to delete
+          if (self::groupContactExists($cuserid, $mapping['cgroup_id'])) {
+            $gc2 = civicrm_api3("GroupContact", "delete", [
+              'group_id' => $mapping['cgroup_id'],
+              'contact_id' => $cuserid,
+            ]);
+            //CRM_Core_Error::debug_var('gc2', $gc2, true, true, 'cgs');
+          }
         }
       }
       catch (CiviCRM_API3_Exception $e) {}
@@ -411,6 +414,22 @@ class plgSystemCiviGroupSync extends JPlugin
       //CRM_Core_Error::debug_var('contactInGroup $cg', $cg, true, true, 'cgs');
 
       if ($cg['count']) {
+        return TRUE;
+      }
+    }
+    catch (CiviCRM_API3_Exception $e) {}
+
+    return FALSE;
+  }
+
+  function groupContactExists($cId, $groupId) {
+    try {
+      $gc = civicrm_api3('GroupContact', 'get', [
+        'contact_id' => $cId,
+        'group_id' => $groupId,
+      ]);
+
+      if ($gc['count']) {
         return TRUE;
       }
     }
